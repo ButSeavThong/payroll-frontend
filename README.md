@@ -61,7 +61,7 @@ A comprehensive full-stack HR and Payroll Management System built with Next.js 1
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone [<repository-url>](https://github.com/ButSeavThong/rayroll-frontend.git)
 cd hr-payroll-system
 ```
 
