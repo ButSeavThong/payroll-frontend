@@ -1,52 +1,21 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { RootState } from '../../store';
-import { clearAuth } from './authSlice';
+import { baseApi } from '@/src/lib/baseApi';
 
-const baseQuery = fetchBaseQuery({
-  baseUrl: '/api/v1',
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.token;
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    return headers;
-  },
-});
+interface LoginResponse {
+  tokenType: string;
+  accessToken: string;
+  refreshToken: string;
+}
 
-const baseQueryWithAuth = async (args: any, api: any, extraOptions: any) => {
-  const result = await baseQuery(args, api, extraOptions);
+interface LoginRequest {
+  email: string;
+  password: string;
+}
 
-  if (result.error?.status === 401) {
-    api.dispatch(clearAuth());
-    // Redirect to login
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
-    }
-  }
-
-  return result;
-};
-
-export const authApi = createApi({
-  reducerPath: 'authApi',
-  baseQuery: baseQueryWithAuth,
+export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    login: builder.mutation<
-      { token: string; role: 'ADMIN' | 'EMPLOYEE' },
-      { username: string; password: string }
-    >({
+    login: builder.mutation<LoginResponse, LoginRequest>({
       query: (credentials) => ({
         url: '/auth/login',
-        method: 'POST',
-        body: credentials,
-      }),
-    }),
-    register: builder.mutation<
-      { id: string; token: string; role: 'ADMIN' | 'EMPLOYEE' },
-      { username: string; email: string; password: string; role?: 'ADMIN' | 'EMPLOYEE' }
-    >({
-      query: (credentials) => ({
-        url: '/auth/register',
         method: 'POST',
         body: credentials,
       }),
@@ -54,4 +23,4 @@ export const authApi = createApi({
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation } = authApi;
+export const { useLoginMutation } = authApi;

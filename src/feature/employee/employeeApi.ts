@@ -1,20 +1,10 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { RootState } from '../../store';
+import { baseApi } from '@/src/lib/baseApi';
 
-const baseQuery = fetchBaseQuery({
-  baseUrl: '/api/v1',
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.token;
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    return headers;
-  },
-});
-
-export interface Employee {
-  id: string;
-  userId: string;
+interface EmployeeResponse {
+  id: number;
+  userId: number;
+  username: string;
+  email: string;
   firstName: string;
   lastName: string;
   department: string;
@@ -22,38 +12,42 @@ export interface Employee {
   baseSalary: number;
   hireDate: string;
   isActive: boolean;
-  createdAt?: string;
+  createdAt: string;
 }
 
-export const employeeApi = createApi({
-  reducerPath: 'employeeApi',
-  baseQuery,
-  tagTypes: ['Employee'],
+interface CreateEmployeeRequest {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  position: string;
+  baseSalary: number;
+  hireDate: string;
+}
+
+interface UpdateEmployeeRequest {
+  firstName: string;
+  lastName: string;
+  department: string;
+  position: string;
+  baseSalary: number;
+}
+
+export const employeeApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getEmployees: builder.query<Employee[], void>({
+    getEmployees: builder.query<EmployeeResponse[], void>({
       query: () => '/employees',
       providesTags: ['Employee'],
     }),
-    getEmployee: builder.query<Employee, string>({
+    getEmployeeById: builder.query<EmployeeResponse, number>({
       query: (id) => `/employees/${id}`,
-      providesTags: (result) => (result ? [{ type: 'Employee', id: result.id }] : []),
+      providesTags: ['Employee'],
     }),
-    getMyEmployee: builder.query<Employee, void>({
+    getMyProfile: builder.query<EmployeeResponse, void>({
       query: () => '/employees/me',
       providesTags: ['Employee'],
     }),
-    createEmployee: builder.mutation<
-      Employee,
-      {
-        userId: string;
-        firstName: string;
-        lastName: string;
-        department: string;
-        position: string;
-        baseSalary: number;
-        hireDate: string;
-      }
-    >({
+    createEmployee: builder.mutation<EmployeeResponse, CreateEmployeeRequest>({
       query: (body) => ({
         url: '/employees',
         method: 'POST',
@@ -61,24 +55,21 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee'],
     }),
-    updateEmployee: builder.mutation<
-      Employee,
-      { id: string; data: Partial<Omit<Employee, 'id' | 'userId' | 'createdAt'>> }
-    >({
-      query: ({ id, data }) => ({
+    updateEmployee: builder.mutation<EmployeeResponse, { id: number; body: UpdateEmployeeRequest }>({
+      query: ({ id, body }) => ({
         url: `/employees/${id}`,
         method: 'PUT',
-        body: data,
+        body,
       }),
-      invalidatesTags: (result) => (result ? [{ type: 'Employee', id: result.id }] : []),
+      invalidatesTags: ['Employee'],
     }),
   }),
 });
 
 export const {
   useGetEmployeesQuery,
-  useGetEmployeeQuery,
-  useGetMyEmployeeQuery,
+  useGetEmployeeByIdQuery,
+  useGetMyProfileQuery,
   useCreateEmployeeMutation,
   useUpdateEmployeeMutation,
 } = employeeApi;

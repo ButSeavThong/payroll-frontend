@@ -2,30 +2,33 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  
-  // Get token from cookies
   const token = request.cookies.get('auth_token')?.value;
 
-  // Allow login page without token
-  if (pathname.startsWith('/login')) {
-    if (token) {
-      // If user is already logged in, redirect to dashboard
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-    return NextResponse.next();
+  // ── Public routes — no token needed ────────────────────────────────────────
+  const isPublicRoute = pathname.startsWith('/login');
+
+  // ── Protected routes ────────────────────────────────────────────────────────
+  const isProtectedRoute =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/employees') ||
+    pathname.startsWith('/attendance') ||
+    pathname.startsWith('/payroll') ||
+    pathname.startsWith('/users') ||
+    pathname === '/';
+
+  // Already logged in → don't show login page again
+  if (isPublicRoute && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Protect dashboard routes
-  if (pathname.startsWith('/dashboard') || pathname === '/') {
-    if (!token) {
-      // Redirect to login if no token
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  // Not logged in → redirect to login
+  if (isProtectedRoute && !token) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon-.*|apple-icon).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon-.*|apple-icon|api/).*)'],
 };

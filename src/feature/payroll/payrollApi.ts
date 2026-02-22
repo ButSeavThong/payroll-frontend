@@ -1,70 +1,56 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { RootState } from '../../store';
+import { baseApi } from '@/src/lib/baseApi';
 
-const baseQuery = fetchBaseQuery({
-  baseUrl: '/api/v1',
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.token;
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    return headers;
-  },
-});
-
-export interface Payroll {
-  id: string;
-  employeeId: string;
-  employeeName?: string;
-  month: string; // yyyy-MM format
+interface PayrollResponse {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  month: string;
   baseSalary: number;
   overtimePay: number;
   tax: number;
   netSalary: number;
   status: 'GENERATED' | 'PAID';
-  createdAt?: string;
 }
 
-export const payrollApi = createApi({
-  reducerPath: 'payrollApi',
-  baseQuery,
-  tagTypes: ['Payroll'],
+interface GeneratePayrollRequest {
+  employeeId: number | null;
+  month: string;
+}
+
+export const payrollApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getPayrolls: builder.query<Payroll[], { month?: string } | void>({
-      query: (params) => ({
-        url: '/payroll/all',
-        params,
-      }),
-      providesTags: ['Payroll'],
-    }),
-    getMyPayroll: builder.query<Payroll[], void>({
-      query: () => '/payroll/my',
-      providesTags: ['Payroll'],
-    }),
-    generatePayroll: builder.mutation<
-      Payroll[],
-      { employeeId?: string; month: string }
-    >({
+    generatePayroll: builder.mutation<PayrollResponse[], GeneratePayrollRequest>({
       query: (body) => ({
-        url: '/payroll/generate',
+        url: '/payrolls/generate',
         method: 'POST',
         body,
       }),
       invalidatesTags: ['Payroll'],
     }),
-    markPayrollAsPaid: builder.mutation<Payroll, string>({
+    getAllPayrolls: builder.query<PayrollResponse[], string | void>({
+      query: (month) => ({
+        url: '/payrolls',
+        params: month ? { month } : {},
+      }),
+      providesTags: ['Payroll'],
+    }),
+    markAsPaid: builder.mutation<PayrollResponse, number>({
       query: (id) => ({
-        url: `/payroll/${id}/pay`,
+        url: `/payrolls/${id}/pay`,
         method: 'PATCH',
       }),
       invalidatesTags: ['Payroll'],
+    }),
+    getMyPayrolls: builder.query<PayrollResponse[], void>({
+      query: () => '/payrolls/my',
+      providesTags: ['Payroll'],
     }),
   }),
 });
 
 export const {
-  useGetPayrollsQuery,
-  useGetMyPayrollQuery,
   useGeneratePayrollMutation,
-  useMarkPayrollAsPaidMutation,
+  useGetAllPayrollsQuery,
+  useMarkAsPaidMutation,
+  useGetMyPayrollsQuery,
 } = payrollApi;

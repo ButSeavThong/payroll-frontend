@@ -1,47 +1,46 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { RootState } from '../../store';
+// src/feature/user/userApi.ts
+import { baseApi } from '@/src/lib/baseApi';
 
-const baseQuery = fetchBaseQuery({
-  baseUrl: '/api/v1',
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.token;
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    return headers;
-  },
-});
-
-export interface User {
-  id: string;
+// Matches your Spring Boot UserProfileResponse exactly
+export interface UserResponse {
+  id: number;
   username: string;
   email: string;
-  role: 'ADMIN' | 'EMPLOYEE';
-  dob?: string;
-  gender?: string;
-  createdAt?: string;
+  gender: string | null;
+  dob: string | null;        // LocalDate serialized as "yyyy-MM-dd"
+  isDeleted: boolean;
+  profileImage: string | null;
 }
 
-export const userApi = createApi({
-  reducerPath: 'userApi',
-  baseQuery,
-  tagTypes: ['User'],
+// What we send to POST /auth/register
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  confirmedPassword: string;  // ✅ add this — backend requires it
+  dob?: string;
+  gender?: string;
+}
+
+export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUsers: builder.query<User[], void>({
+
+    // GET /api/v1/users — admin gets all users
+    getUsers: builder.query<UserResponse[], void>({
       query: () => '/users',
       providesTags: ['User'],
     }),
-    createUser: builder.mutation<
-      User,
-      { username: string; email: string; password: string; dob?: string; gender?: string; role: 'ADMIN' | 'EMPLOYEE' }
-    >({
+
+    // POST /api/v1/auth/register — admin creates user (default role = EMPLOYEE)
+    createUser: builder.mutation<UserResponse, RegisterRequest>({
       query: (body) => ({
-        url: '/users',
+        url: '/auth/register',
         method: 'POST',
         body,
       }),
       invalidatesTags: ['User'],
     }),
+
   }),
 });
 
