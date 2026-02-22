@@ -5,7 +5,7 @@ import { clearAuth } from '@/src/feature/auth/authSlice';
 
 const baseQuery = fetchBaseQuery({
   // ✅ Points to your real Spring Boot backend
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api/v1',
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://hr-payroll-backend-l6pk.onrender.com/api/v1',
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token;
     if (token) {
