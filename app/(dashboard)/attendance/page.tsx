@@ -40,6 +40,7 @@ function formatDate(dateStr: string): string {
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone: "Asia/Phnom_Penh",
   });
 }
 
@@ -48,6 +49,7 @@ function formatTime(dateTimeStr: string | null | undefined): string {
   return new Date(dateTimeStr).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Phnom_Penh",
   });
 }
 
@@ -182,6 +184,7 @@ export default function AttendancePage() {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
+                timeZone: "Asia/Phnom_Penh",
               })}
             </CardDescription>
           </CardHeader>

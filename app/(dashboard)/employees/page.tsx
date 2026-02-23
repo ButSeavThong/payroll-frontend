@@ -7,6 +7,7 @@ import {
   useGetMyProfileQuery,
 } from "@/src/feature/employee/employeeApi";
 import { CreateEmployeeModal } from "@/src/components/create-employee-modal";
+import { UpdateEmployeeModal } from "@/src/components/update-employee-modal"; // ✅ import
 import { LoadingTable } from "@/src/components/loading-table";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react"; // ✅ add Pencil
 
 // ─── Local helpers ────────────────────────────────────────────────────────────
 
@@ -45,9 +46,6 @@ function formatDate(dateStr: string): string {
   });
 }
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
-// Handles ACTIVE / INACTIVE — separate from attendance StatusBadge
-
 function ActiveBadge({ isActive }: { isActive: boolean }) {
   return (
     <span
@@ -60,23 +58,44 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
   );
 }
 
+// ─── Type for selected employee ───────────────────────────────────────────────
+
+interface SelectedEmployee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  position: string;
+  baseSalary: number;
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function EmployeesPage() {
   const role = useAppSelector((state) => state.auth.role);
   const isAdmin = role === "ADMIN";
-  const [modalOpen, setModalOpen] = useState(false);
 
-  // ✅ Admin — fetch all employees
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  // ✅ Track which employee is being edited
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<SelectedEmployee | null>(null);
+
   const { data: employees, isLoading } = useGetEmployeesQuery(undefined, {
     skip: !isAdmin,
   });
 
-  // ✅ Employee — fetch own profile using correct hook name
   const { data: myProfile, isLoading: myProfileLoading } = useGetMyProfileQuery(
     undefined,
     { skip: isAdmin },
   );
+
+  // ✅ Open update modal with pre-filled data
+  const handleEditClick = (employee: SelectedEmployee) => {
+    setSelectedEmployee(employee);
+    setUpdateModalOpen(true);
+  };
 
   // ── Employee View ─────────────────────────────────────────────────────────
 
@@ -94,7 +113,6 @@ export default function EmployeesPage() {
               <div className="animate-pulse space-y-3">
                 <div className="h-4 bg-slate-200 rounded w-3/4" />
                 <div className="h-4 bg-slate-200 rounded w-2/4" />
-                <div className="h-4 bg-slate-200 rounded w-3/4" />
               </div>
             </CardContent>
           </Card>
@@ -105,54 +123,26 @@ export default function EmployeesPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-sm text-slate-500">First Name</p>
-                  <p className="font-semibold text-slate-900 mt-1">
-                    {myProfile.firstName}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Last Name</p>
-                  <p className="font-semibold text-slate-900 mt-1">
-                    {myProfile.lastName}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Username</p>
-                  <p className="font-semibold text-slate-900 mt-1">
-                    {myProfile.username}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Email</p>
-                  <p className="font-semibold text-slate-900 mt-1">
-                    {myProfile.email || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Department</p>
-                  <p className="font-semibold text-slate-900 mt-1">
-                    {myProfile.department || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Position</p>
-                  <p className="font-semibold text-slate-900 mt-1">
-                    {myProfile.position || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Base Salary</p>
-                  <p className="font-semibold text-slate-900 mt-1">
-                    {formatSalary(myProfile.baseSalary)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Hire Date</p>
-                  <p className="font-semibold text-slate-900 mt-1">
-                    {formatDate(myProfile.hireDate)}
-                  </p>
-                </div>
+                {[
+                  { label: "First Name", value: myProfile.firstName },
+                  { label: "Last Name", value: myProfile.lastName },
+                  { label: "Username", value: myProfile.username },
+                  { label: "Email", value: myProfile.email || "N/A" },
+                  { label: "Department", value: myProfile.department || "N/A" },
+                  { label: "Position", value: myProfile.position || "N/A" },
+                  {
+                    label: "Base Salary",
+                    value: formatSalary(myProfile.baseSalary),
+                  },
+                  { label: "Hire Date", value: formatDate(myProfile.hireDate) },
+                ].map((field) => (
+                  <div key={field.label}>
+                    <p className="text-sm text-slate-500">{field.label}</p>
+                    <p className="font-semibold text-slate-900 mt-1">
+                      {field.value}
+                    </p>
+                  </div>
+                ))}
                 <div>
                   <p className="text-sm text-slate-500">Status</p>
                   <div className="mt-1">
@@ -160,8 +150,6 @@ export default function EmployeesPage() {
                   </div>
                 </div>
               </div>
-
-              {/* HR note */}
               <div className="mt-6 pt-6 border-t">
                 <p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-4 py-3">
                   To update your profile information, please contact your HR
@@ -194,7 +182,7 @@ export default function EmployeesPage() {
             Manage employee profiles and information
           </p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
+        <Button onClick={() => setCreateModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Create Employee Profile
         </Button>
@@ -218,7 +206,7 @@ export default function EmployeesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <LoadingTable columns={7} />
+            <LoadingTable columns={8} />
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -232,6 +220,7 @@ export default function EmployeesPage() {
                     <TableHead>Salary</TableHead>
                     <TableHead>Hire Date</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Action</TableHead> {/* ✅ new column */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -256,12 +245,34 @@ export default function EmployeesPage() {
                         <TableCell>
                           <ActiveBadge isActive={employee.isActive} />
                         </TableCell>
+
+                        {/* ✅ Edit button */}
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs gap-1.5"
+                            onClick={() =>
+                              handleEditClick({
+                                id: employee.id,
+                                firstName: employee.firstName,
+                                lastName: employee.lastName,
+                                department: employee.department,
+                                position: employee.position,
+                                baseSalary: employee.baseSalary,
+                              })
+                            }
+                          >
+                            <Pencil size={12} />
+                            Edit
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
                       <TableCell
-                        colSpan={8}
+                        colSpan={9}
                         className="text-center text-slate-500 py-8"
                       >
                         No employees found. Create an employee profile to get
@@ -276,7 +287,18 @@ export default function EmployeesPage() {
         </CardContent>
       </Card>
 
-      <CreateEmployeeModal open={modalOpen} onOpenChange={setModalOpen} />
+      {/* Create Modal */}
+      <CreateEmployeeModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+      />
+
+      {/* ✅ Update Modal */}
+      <UpdateEmployeeModal
+        open={updateModalOpen}
+        onOpenChange={setUpdateModalOpen}
+        employee={selectedEmployee}
+      />
     </div>
   );
 }
