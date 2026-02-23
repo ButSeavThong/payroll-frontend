@@ -18,6 +18,7 @@ import {
   X,
   ChevronRight,
   Building2,
+  Cpu,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -40,6 +41,7 @@ const adminMenu = [
   { label: "Employees", href: "/employees", icon: UserCheck },
   { label: "Attendance", href: "/attendance", icon: Clock },
   { label: "Payroll", href: "/payroll", icon: Banknote },
+  { label: "System", href: "/system", icon: Cpu },
 ];
 
 const employeeMenu = [
@@ -47,6 +49,7 @@ const employeeMenu = [
   { label: "My Profile", href: "/profile", icon: UserCheck },
   { label: "My Attendance", href: "/attendance", icon: Clock },
   { label: "My Payroll", href: "/payroll", icon: Banknote },
+  { label: "System", href: "/system", icon: Cpu },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
