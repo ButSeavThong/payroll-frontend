@@ -32,7 +32,7 @@ export const baseApi = createApi({
   baseQuery: baseQueryWithAuth,
   tagTypes: ['Employee', 'Attendance', 'Payroll', 'User', 'Leave'],
 
-  // ✅ These 3 lines fix the re-render loop
+  //  These 3 lines fix the re-render loop
   keepUnusedDataFor:        60,     // cache data 60s before discarding
   refetchOnFocus:           false,  // don't refetch when window gets focus
   refetchOnReconnect:       false,  // don't refetch on network reconnect
