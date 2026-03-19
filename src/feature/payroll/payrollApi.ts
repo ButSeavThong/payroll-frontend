@@ -1,12 +1,15 @@
 import { baseApi } from '@/src/lib/baseApi';
 
-interface PayrollResponse {
+// Add unpaidLeaveDeduction and unpaidLeaveDays to PayrollResponse interface
+export interface PayrollResponse {
   id: number;
   employeeId: number;
   employeeName: string;
   month: string;
   baseSalary: number;
   overtimePay: number;
+  unpaidLeaveDeduction: number;  
+  unpaidLeaveDays: number;      
   tax: number;
   netSalary: number;
   status: 'GENERATED' | 'PAID';

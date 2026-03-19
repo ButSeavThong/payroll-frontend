@@ -32,7 +32,15 @@ import { cn } from "@/lib/utils";
 // ─── Local helpers (safe, no external dependency) ───────────────────────────
 
 function getTodayDate(): string {
-  return new Date().toISOString().split("T")[0]; // "yyyy-MM-dd"
+  //  Must use Asia/Phnom_Penh timezone — NOT toISOString() which returns UTC.
+  // At 03:07 local time the UTC date is still yesterday, causing todayRecord
+  // to never match → hasCheckedIn=false → Check In enabled, Check Out disabled.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Phnom_Penh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date()); // returns "yyyy-MM-dd" in local timezone
 }
 
 function formatDate(dateStr: string): string {

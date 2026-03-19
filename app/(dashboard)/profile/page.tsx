@@ -3,19 +3,21 @@
 
 import { useAppSelector } from "@/src/hooks";
 import { useGetMyProfileQuery } from "@/src/feature/employee/employeeApi";
+import { ProfileImageUpload } from "@/src/components/profile-image-upload";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  ArrowLeft,
+  Building2,
+  Briefcase,
+  DollarSign,
+  CalendarDays,
   Mail,
   User,
-  Briefcase,
-  MapPin,
-  DollarSign,
-  Calendar,
-  ShieldCheck,
+  Shield,
 } from "lucide-react";
-import Link from "next/link";
 
-function formatSalary(amount: number): string {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatSalary(amount: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -23,233 +25,243 @@ function formatSalary(amount: number): string {
   }).format(amount);
 }
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return "N/A";
-  return new Date(dateStr).toLocaleDateString("en-US", {
+function formatDate(d: string) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
 }
 
-function ProfileSkeleton() {
-  return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-3xl px-6 py-8">
-        <div className="h-8 w-32 bg-gray-200 rounded animate-pulse mb-8" />
-        <div className="h-48 bg-gray-200 rounded-2xl animate-pulse mb-6" />
-        <div className="h-80 bg-gray-200 rounded-2xl animate-pulse" />
-      </div>
-    </div>
-  );
-}
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
-  const { data: employee, isLoading, isError } = useGetMyProfileQuery();
+  const role = useAppSelector((s) => s.auth.role);
 
-  if (isLoading) return <ProfileSkeleton />;
+  // ✅ Hook called INSIDE the component — not outside
+  const { data: profile, isLoading, refetch } = useGetMyProfileQuery();
 
-  if (isError || !employee) {
+  // ── Loading ─────────────────────────────────────────────────────────────
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="mx-auto max-w-3xl px-6 py-8">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-gray-900 mb-8"
-          >
-            <ArrowLeft size={14} /> Back to Dashboard
-          </Link>
-          <div className="border border-gray-200 rounded-2xl bg-white p-12 text-center">
-            <p className="text-gray-600">
-              No employee profile found. Please contact your HR administrator.
-            </p>
+      <div className="space-y-6 max-w-3xl animate-pulse">
+        <div className="h-48 bg-slate-200 rounded-2xl" />
+        <div className="h-40 bg-slate-100 rounded-2xl" />
+        <div className="h-52 bg-slate-100 rounded-2xl" />
+      </div>
+    );
+  }
+
+  // ── Not found ───────────────────────────────────────────────────────────
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <User size={24} className="text-slate-400" />
           </div>
+          <p className="text-slate-600 font-medium">Profile not found</p>
+          <p className="text-slate-400 text-sm mt-1">
+            Contact your administrator to set up your employee profile.
+          </p>
         </div>
       </div>
     );
   }
 
-  const initials =
-    `${employee.firstName?.[0] ?? ""}${employee.lastName?.[0] ?? ""}`.toUpperCase();
+  const fullName = `${profile.firstName} ${profile.lastName}`;
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-3xl px-6 py-8">
-        {/* Back Link */}
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-gray-900 mb-8"
-        >
-          <ArrowLeft size={14} /> Dashboard
-        </Link>
+    <div className="space-y-6 max-w-3xl">
+      {/* ── Hero Card ────────────────────────────────────────────────────── */}
+      <Card className="overflow-hidden">
+        {/* Dark banner */}
+        <div className="h-28 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 relative">
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: `radial-gradient(circle at 20px 20px, white 1px, transparent 0)`,
+              backgroundSize: "40px 40px",
+            }}
+          />
+          {/* Role badge */}
+          <div className="absolute top-4 right-4">
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                role === "ADMIN"
+                  ? "bg-purple-500/30 text-purple-200 border border-purple-500/40"
+                  : "bg-emerald-500/30 text-emerald-200 border border-emerald-500/40"
+              }`}
+            >
+              <Shield size={11} />
+              {role}
+            </span>
+          </div>
+        </div>
 
-        {/* ── Hero Banner ──────────────────────────────── */}
-        <div className="border border-gray-200 rounded-2xl bg-gradient-to-br from-gray-50 to-white p-8 mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            {/* Avatar */}
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-gray-300 to-gray-400 text-white text-2xl font-bold flex-shrink-0">
-              {initials}
+        <CardContent className="px-6 pb-6">
+          {/* Avatar + name row — overlaps banner */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-5 -mt-12">
+            {/* ✅ Profile image upload */}
+            <div className="flex-shrink-0">
+              <ProfileImageUpload
+                currentImage={profile.profileImage}
+                name={fullName}
+                onSuccess={refetch}
+              />
             </div>
 
-            <div className="flex-1">
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
-                Employee Profile
-              </p>
-              <h1 className="text-3xl font-bold text-gray-800 mb-3">
-                {employee.firstName} {employee.lastName}
+            {/* Name + position + email */}
+            <div className="flex-1 pb-1 pt-14 sm:pt-0">
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                {fullName}
               </h1>
-              <div className="flex flex-wrap items-center gap-3">
-                {employee.position && (
-                  <span className="flex items-center gap-1 text-sm text-gray-600">
-                    <Briefcase size={14} />
-                    {employee.position}
+              <p className="text-slate-500 text-sm mt-0.5">
+                {profile.position || "—"}
+                {profile.department && (
+                  <span className="text-slate-400">
+                    {" "}
+                    · {profile.department}
                   </span>
                 )}
-                {employee.department && (
-                  <span className="flex items-center gap-1 text-sm text-gray-600">
-                    <MapPin size={14} />
-                    {employee.department}
-                  </span>
-                )}
+              </p>
+              <div className="flex items-center gap-1.5 mt-2">
+                <Mail size={12} className="text-slate-400" />
+                <span className="text-xs text-slate-400">{profile.email}</span>
+              </div>
+            </div>
+
+            {/* Active / Inactive badge */}
+            <div className="flex-shrink-0">
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                  profile.isActive
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
                 <span
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
-                    employee.isActive
-                      ? "bg-gray-100 text-gray-700"
-                      : "bg-gray-100 text-gray-600"
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    profile.isActive
+                      ? "bg-emerald-500 animate-pulse"
+                      : "bg-red-500"
                   }`}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                  {employee.isActive ? "Active" : "Inactive"}
-                </span>
-              </div>
+                />
+                {profile.isActive ? "Active" : "Inactive"}
+              </span>
             </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* ── Personal Information ─────────────────────── */}
-        <div className="border border-gray-200 rounded-2xl bg-white overflow-hidden mb-6">
-          <div className="border-b border-gray-200 px-6 py-4 flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-              <User size={16} />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-800">
-              Personal Information
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
-                  First Name
+      {/* ── Personal Information ─────────────────────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <User size={16} className="text-blue-500" />
+            Personal Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { label: "First Name", value: profile.firstName },
+              { label: "Last Name", value: profile.lastName },
+              {
+                label: "Username",
+                value: (
+                  <span className="font-mono text-sm bg-slate-100 px-2 py-0.5 rounded text-slate-700">
+                    @{profile.username}
+                  </span>
+                ),
+              },
+              {
+                label: "Email",
+                value: (
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <Mail size={12} className="text-slate-400 flex-shrink-0" />
+                    {profile.email}
+                  </span>
+                ),
+              },
+            ].map((field) => (
+              <div key={field.label} className="bg-slate-50 rounded-xl p-4">
+                <p className="text-xs text-slate-400 uppercase tracking-wider font-medium mb-1.5">
+                  {field.label}
                 </p>
-                <p className="text-lg font-semibold text-gray-800">
-                  {employee.firstName}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
-                  Last Name
-                </p>
-                <p className="text-lg font-semibold text-gray-800">
-                  {employee.lastName}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
-                  Username
-                </p>
-                <p className="inline-block font-mono bg-gray-100 px-2 py-1 rounded text-sm text-gray-700">
-                  @{employee.username}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
-                  Email
-                </p>
-                <p className="flex items-center gap-2 text-gray-700">
-                  <Mail size={14} className="text-gray-600" />
-                  {employee.email || "N/A"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Employment Details ───────────────────────── */}
-        <div className="border border-gray-200 rounded-2xl bg-white overflow-hidden mb-6">
-          <div className="border-b border-gray-200 px-6 py-4 flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-              <Briefcase size={16} />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-800">
-              Employment Details
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="border border-gray-200 rounded-lg bg-gray-50 p-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 mb-3">
-                  <Briefcase size={14} />
+                <div className="text-sm font-semibold text-slate-900">
+                  {field.value}
                 </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
-                  Department
-                </p>
-                <p className="text-gray-800 font-medium">
-                  {employee.department || "N/A"}
-                </p>
               </div>
-
-              <div className="border border-gray-200 rounded-lg bg-gray-50 p-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 mb-3">
-                  <MapPin size={14} />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
-                  Position
-                </p>
-                <p className="text-gray-800 font-medium">
-                  {employee.position || "N/A"}
-                </p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg bg-gray-50 p-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 mb-3">
-                  <DollarSign size={14} />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
-                  Base Salary
-                </p>
-                <p className="text-lg font-bold text-gray-800">
-                  {formatSalary(employee.baseSalary)}
-                </p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg bg-gray-50 p-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 mb-3">
-                  <Calendar size={14} />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
-                  Hire Date
-                </p>
-                <p className="text-gray-800 font-medium">
-                  {formatDate(employee.hireDate)}
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* ── HR Note ──────────────────────────────────── */}
-        <div className="border border-gray-200 rounded-2xl bg-gray-50 p-4 flex gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 flex-shrink-0 mt-0.5">
-            <ShieldCheck size={16} />
+      {/* ── Employment Details ───────────────────────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Briefcase size={16} className="text-emerald-500" />
+            Employment Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              {
+                label: "Department",
+                value: profile.department || "—",
+                icon: <Building2 size={14} className="text-blue-500" />,
+                bg: "bg-blue-50 border-blue-100",
+              },
+              {
+                label: "Position",
+                value: profile.position || "—",
+                icon: <Briefcase size={14} className="text-purple-500" />,
+                bg: "bg-purple-50 border-purple-100",
+              },
+              {
+                label: "Base Salary",
+                value: formatSalary(profile.baseSalary),
+                icon: <DollarSign size={14} className="text-emerald-500" />,
+                bg: "bg-emerald-50 border-emerald-100",
+              },
+              {
+                label: "Hire Date",
+                value: formatDate(profile.hireDate),
+                icon: <CalendarDays size={14} className="text-amber-500" />,
+                bg: "bg-amber-50 border-amber-100",
+              },
+            ].map((field) => (
+              <div
+                key={field.label}
+                className={`rounded-xl border p-4 ${field.bg}`}
+              >
+                <div className="flex items-center gap-1.5 mb-2">
+                  {field.icon}
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    {field.label}
+                  </p>
+                </div>
+                <p className="font-bold text-slate-900">{field.value}</p>
+              </div>
+            ))}
           </div>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            <span className="font-semibold">Read-only profile.</span> To update
-            your name, department, salary, or any other details — please reach
-            out to your <span className="font-semibold">HR administrator</span>.
-          </p>
-        </div>
-      </div>
+
+          {/* Info note */}
+          <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-start gap-2">
+            <Shield size={14} className="text-slate-400 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Employment details are managed by HR. To request changes to your
+              department, position, or salary, please contact your
+              administrator. You can update your <strong>profile image</strong>{" "}
+              above at any time.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

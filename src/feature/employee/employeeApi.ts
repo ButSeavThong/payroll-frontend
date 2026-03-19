@@ -13,6 +13,7 @@ interface EmployeeResponse {
   hireDate: string;
   isActive: boolean;
   createdAt: string;
+  profileImage: string | null;
 }
 
 interface CreateEmployeeRequest {
@@ -33,12 +34,40 @@ interface UpdateEmployeeRequest {
   baseSalary: number;
 }
 
+
+export interface OnboardEmployeeRequest {
+  // User fields
+  username: string;
+  email: string;
+  password: string;
+  confirmedPassword: string;
+  gender: string;
+  dob: string;
+
+  // Employee fields
+  firstName: string;
+  lastName: string;
+  department: string;
+  position: string;
+  baseSalary: number;
+  hireDate: string;
+}
+
 export const employeeApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getEmployees: builder.query<EmployeeResponse[], void>({
       query: () => '/employees',
       providesTags: ['Employee'],
     }),
+
+    onboardEmployee: builder.mutation<EmployeeResponse, OnboardEmployeeRequest>({
+      query: (body) => ({
+      url: '/employees/onboard',
+      method: 'POST',
+      body,
+    }),
+  invalidatesTags: ['Employee'],
+}),
     getEmployeeById: builder.query<EmployeeResponse, number>({
       query: (id) => `/employees/${id}`,
       providesTags: ['Employee'],
@@ -72,4 +101,5 @@ export const {
   useGetMyProfileQuery,
   useCreateEmployeeMutation,
   useUpdateEmployeeMutation,
+  useOnboardEmployeeMutation,   
 } = employeeApi;

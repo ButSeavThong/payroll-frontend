@@ -4,8 +4,7 @@ import { RootState } from '@/src/store';
 import { clearAuth } from '@/src/feature/auth/authSlice';
 
 const baseQuery = fetchBaseQuery({
-  // ✅ Points to your real Spring Boot backend
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://hr-payroll-backend-l6pk.onrender.com/api/v1',
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token;
     if (token) {
@@ -18,7 +17,6 @@ const baseQuery = fetchBaseQuery({
 const baseQueryWithAuth = async (args: any, api: any, extraOptions: any) => {
   const result = await baseQuery(args, api, extraOptions);
 
-  // Auto logout on 401 Unauthorized
   if (result.error?.status === 401) {
     api.dispatch(clearAuth());
     if (typeof window !== 'undefined') {
@@ -29,10 +27,16 @@ const baseQueryWithAuth = async (args: any, api: any, extraOptions: any) => {
   return result;
 };
 
-// Single shared API — all features inject into this
 export const baseApi = createApi({
   reducerPath: 'baseApi',
   baseQuery: baseQueryWithAuth,
-  tagTypes: ['Employee', 'Attendance', 'Payroll', 'User'],
-  endpoints: () => ({}), // empty — each feature injects their own
+  tagTypes: ['Employee', 'Attendance', 'Payroll', 'User', 'Leave'],
+
+  // ✅ These 3 lines fix the re-render loop
+  keepUnusedDataFor:        60,     // cache data 60s before discarding
+  refetchOnFocus:           false,  // don't refetch when window gets focus
+  refetchOnReconnect:       false,  // don't refetch on network reconnect
+  refetchOnMountOrArgChange: false, // don't refetch every time component mounts
+
+  endpoints: () => ({}),
 });
