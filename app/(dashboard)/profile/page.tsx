@@ -8,8 +8,8 @@ import {
   ProfileImageUpload,
 } from "@/src/components/profile-image-upload";
 import {
-  Building2,
   Briefcase,
+  Building2,
   CalendarDays,
   DollarSign,
   Mail,
@@ -17,7 +17,7 @@ import {
   User,
   UserRound,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 function formatSalary(amount: number) {
   return new Intl.NumberFormat("en-US", {
@@ -36,18 +36,18 @@ function formatDate(date: string) {
   });
 }
 
-function StatusBadge({ isActive }: { isActive: boolean }) {
+function StatusPill({ isActive }: { isActive: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
+      className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${
         isActive
-          ? "bg-emerald-100 text-emerald-800"
-          : "bg-red-100 text-red-700"
+          ? "bg-emerald-100 text-emerald-700"
+          : "bg-rose-100 text-rose-700"
       }`}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${
-          isActive ? "bg-emerald-500" : "bg-red-500"
+        className={`h-2 w-2 rounded-full ${
+          isActive ? "bg-emerald-500" : "bg-rose-500"
         }`}
       />
       {isActive ? "Active" : "Inactive"}
@@ -55,24 +55,77 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
   );
 }
 
-function InfoCard({
-  icon,
+function DetailRow({
   label,
   value,
+  icon,
 }: {
-  icon: ReactNode;
   label: string;
   value: ReactNode;
+  icon: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-      <div className="mb-2 flex items-center gap-2 text-slate-500">
+    <div className="flex items-start gap-3 border-t border-slate-200 py-4 first:border-t-0 first:pt-0 last:pb-0">
+      <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
         {icon}
-        <p className="text-xs font-semibold uppercase tracking-[0.2em]">
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
           {label}
         </p>
+        <div className="mt-1 text-sm font-medium text-slate-900">{value}</div>
       </div>
-      <div className="text-sm font-semibold text-slate-900">{value}</div>
+    </div>
+  );
+}
+
+function InfoBlock({
+  eyebrow,
+  title,
+  description,
+  children,
+  tone = "white",
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+  tone?: "white" | "soft";
+}) {
+  const shell =
+    tone === "soft"
+      ? "bg-emerald-50/50 border-emerald-100"
+      : "bg-white border-slate-200";
+
+  return (
+    <Card className={`overflow-hidden rounded-[1.75rem] border shadow-sm ${shell}`}>
+      <CardContent className="grid p-0 lg:grid-cols-[0.34fr_0.66fr]">
+        <div className="border-b border-slate-200/80 px-6 py-7 lg:border-b-0 lg:border-r">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+            {eyebrow}
+          </p>
+          <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+            {title}
+          </h3>
+          <p className="mt-3 text-sm leading-6 text-slate-500">{description}</p>
+        </div>
+        <div className="px-6 py-7">{children}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function MetaPill({
+  icon,
+  children,
+}: {
+  icon: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
+      <span className="text-slate-400">{icon}</span>
+      {children}
     </div>
   );
 }
@@ -84,10 +137,10 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-44 animate-pulse rounded-3xl bg-slate-200" />
-        <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-          <div className="h-72 animate-pulse rounded-3xl bg-slate-100" />
-          <div className="h-72 animate-pulse rounded-3xl bg-slate-100" />
+        <div className="h-52 animate-pulse rounded-[1.75rem] bg-slate-200" />
+        <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+          <div className="h-80 animate-pulse rounded-[1.75rem] bg-slate-100" />
+          <div className="h-80 animate-pulse rounded-[1.75rem] bg-slate-100" />
         </div>
       </div>
     );
@@ -95,15 +148,18 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <Card className="mx-auto max-w-2xl border-slate-200 shadow-sm">
-        <CardContent className="flex min-h-72 flex-col items-center justify-center text-center">
-          <div className="mb-4 rounded-3xl bg-slate-100 p-5">
+      <Card className="mx-auto max-w-2xl rounded-[1.75rem] border-slate-200 shadow-sm">
+        <CardContent className="flex min-h-80 flex-col items-center justify-center px-6 py-12 text-center">
+          <div className="rounded-[1.5rem] bg-slate-100 p-5">
             <UserRound className="h-8 w-8 text-slate-400" />
           </div>
-          <h1 className="text-xl font-bold text-slate-900">Profile not found</h1>
-          <p className="mt-2 max-w-md text-sm text-slate-500">
+          <h1 className="mt-6 text-2xl font-semibold text-slate-900">
+            Profile not found
+          </h1>
+          <p className="mt-3 max-w-md text-sm leading-6 text-slate-500">
             Your employee profile has not been created yet. Contact your
-            administrator so they can finish your account setup.
+            administrator so the account can be fully prepared for payroll and
+            self-service access.
           </p>
         </CardContent>
       </Card>
@@ -111,194 +167,160 @@ export default function ProfilePage() {
   }
 
   const fullName = `${profile.firstName} ${profile.lastName}`;
-  const roleTone =
-    role === "ADMIN"
-      ? "bg-blue-100 text-blue-700 border-blue-200"
-      : "bg-emerald-100 text-emerald-700 border-emerald-200";
+  const roleLabel = role === "ADMIN" ? "Administrator" : "Employee";
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">My Profile</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Keep your personal identity polished and review the details HR manages
-          for your payroll record.
+      <div className="max-w-2xl">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+          Profile
+        </p>
+        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-slate-950">
+          My Profile
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-slate-500">
+          A calmer view of your account and payroll details, using the same
+          visual language as the rest of the dashboard.
         </p>
       </div>
 
-      <Card className="overflow-hidden border-slate-200 shadow-sm">
-        <div className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 px-6 py-7 text-white">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(45,212,191,0.3),transparent_30%),radial-gradient(circle_at_left,rgba(59,130,246,0.24),transparent_32%)]" />
-          <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px)] [background-size:32px_32px]" />
-          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex items-start gap-4">
+      <section className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_58%,#ecfdf5_100%)] px-6 py-7 sm:px-8">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
               <Avatar
                 profileImage={profile.profileImage}
                 name={fullName}
                 size="xl"
               />
-              <div className="pt-1">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${roleTone}`}
-                  >
-                    <Shield className="h-3.5 w-3.5" />
-                    {role}
-                  </span>
-                  <StatusBadge isActive={profile.isActive} />
+
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                      <Shield className="h-3.5 w-3.5 text-emerald-600" />
+                      {roleLabel}
+                    </span>
+                    <StatusPill isActive={profile.isActive} />
+                  </div>
+
+                  <h2 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950">
+                    {fullName}
+                  </h2>
+                  <p className="mt-2 text-base text-slate-600">
+                    {profile.position || "Team member"}
+                    {profile.department ? ` in ${profile.department}` : ""}
+                  </p>
                 </div>
-                <h2 className="text-3xl font-bold tracking-tight">{fullName}</h2>
-                <p className="mt-1 text-sm text-slate-300">
-                  {profile.position || "Team member"}
-                  {profile.department ? ` - ${profile.department}` : ""}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-200">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
-                    <Mail className="h-4 w-4" />
-                    {profile.email || "No email"}
-                  </span>
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 font-mono">
-                    <User className="h-4 w-4 font-sans" />
-                    @{profile.username}
-                  </span>
-                </div>
+              </div>
+
+              <div className="sm:self-start">
+                <MetaPill icon={<CalendarDays className="h-4 w-4" />}>
+                  Joined {formatDate(profile.hireDate)}
+                </MetaPill>
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[360px]">
-              <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-300">
-                  Department
-                </p>
-                <p className="mt-2 text-lg font-semibold">
-                  {profile.department || "Not set"}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-300">
-                  Hire Date
-                </p>
-                <p className="mt-2 text-lg font-semibold">
-                  {formatDate(profile.hireDate)}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-300">
-                  Base Salary
-                </p>
-                <p className="mt-2 text-lg font-semibold">
-                  {formatSalary(profile.baseSalary)}
-                </p>
-              </div>
+            <div className="flex flex-wrap gap-3">
+              <MetaPill icon={<Mail className="h-4 w-4" />}>
+                {profile.email || "No email"}
+              </MetaPill>
+              <MetaPill icon={<User className="h-4 w-4 font-sans" />}>
+                <span className="font-mono">@{profile.username}</span>
+              </MetaPill>
             </div>
           </div>
         </div>
-      </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="space-y-6">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base text-slate-900">
-                <User className="h-4 w-4 text-blue-500" />
-                Personal Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <InfoCard
-                icon={<User className="h-4 w-4 text-blue-500" />}
-                label="First Name"
-                value={profile.firstName}
-              />
-              <InfoCard
-                icon={<User className="h-4 w-4 text-cyan-500" />}
-                label="Last Name"
-                value={profile.lastName}
-              />
-              <InfoCard
-                icon={<Mail className="h-4 w-4 text-emerald-500" />}
-                label="Email"
-                value={profile.email || "-"}
-              />
-              <InfoCard
-                icon={<Shield className="h-4 w-4 text-amber-500" />}
-                label="Account Role"
-                value={role || "Employee"}
-              />
-            </CardContent>
-          </Card>
+        <div className="grid gap-0 xl:grid-cols-[1.08fr_0.92fr]">
+          <div className="border-b border-slate-200 xl:border-b-0 xl:border-r">
+            <div className="px-6 py-7 sm:px-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                Identity
+              </p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+                Personal details
+              </h3>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
+                Your core account information appears here exactly as it is used
+                throughout the system.
+              </p>
 
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base text-slate-900">
-                <Briefcase className="h-4 w-4 text-emerald-500" />
-                Employment Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <InfoCard
-                icon={<Building2 className="h-4 w-4 text-blue-500" />}
-                label="Department"
-                value={profile.department || "-"}
-              />
-              <InfoCard
-                icon={<Briefcase className="h-4 w-4 text-violet-500" />}
-                label="Position"
-                value={profile.position || "-"}
-              />
-              <InfoCard
-                icon={<DollarSign className="h-4 w-4 text-emerald-500" />}
-                label="Base Salary"
-                value={formatSalary(profile.baseSalary)}
-              />
-              <InfoCard
-                icon={<CalendarDays className="h-4 w-4 text-amber-500" />}
-                label="Hire Date"
-                value={formatDate(profile.hireDate)}
-              />
-            </CardContent>
-          </Card>
-        </div>
+              <div className="mt-8">
+                <DetailRow
+                  label="Full Name"
+                  value={fullName}
+                  icon={<User className="h-4 w-4" />}
+                />
+                <DetailRow
+                  label="Username"
+                  value={<span className="font-mono">@{profile.username}</span>}
+                  icon={<User className="h-4 w-4" />}
+                />
+                <DetailRow
+                  label="Email"
+                  value={profile.email || "-"}
+                  icon={<Mail className="h-4 w-4" />}
+                />
+                <DetailRow
+                  label="Account Role"
+                  value={roleLabel}
+                  icon={<Shield className="h-4 w-4" />}
+                />
+              </div>
+            </div>
+          </div>
 
-        <div className="space-y-6">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base text-slate-900">
-                Profile Photo
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="bg-slate-50/70 px-6 py-7 sm:px-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+              Profile Photo
+            </p>
+            <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+              Keep it personal, keep it consistent
+            </h3>
+            <p className="mt-3 max-w-lg text-sm leading-6 text-slate-500">
+              Upload a photo anytime. Until then, the default avatar keeps the
+              page feeling complete without introducing a different style.
+            </p>
+
+            <div className="mt-8 flex justify-center rounded-[1.5rem] border border-slate-200 bg-white px-4 py-6">
               <ProfileImageUpload
                 currentImage={profile.profileImage}
                 name={fullName}
                 onSuccess={refetch}
               />
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                Your default avatar now appears automatically until you upload a
-                photo, so the profile card always looks complete.
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base text-slate-900">
-                Update Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-slate-600">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                Identity details like your name and email appear here exactly as
-                they are stored in payroll.
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                HR manages department, position, salary, and hire date. Reach
-                out to your administrator if any of those need correction.
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <InfoBlock
+        eyebrow="Work Record"
+        title="Employment details"
+        description="These fields are part of the HR-managed record used for payroll and employment history."
+        tone="soft"
+      >
+        <DetailRow
+          label="Department"
+          value={profile.department || "-"}
+          icon={<Building2 className="h-4 w-4" />}
+        />
+        <DetailRow
+          label="Position"
+          value={profile.position || "-"}
+          icon={<Briefcase className="h-4 w-4" />}
+        />
+        <DetailRow
+          label="Base Salary"
+          value={formatSalary(profile.baseSalary)}
+          icon={<DollarSign className="h-4 w-4" />}
+        />
+        <DetailRow
+          label="Hire Date"
+          value={formatDate(profile.hireDate)}
+          icon={<CalendarDays className="h-4 w-4" />}
+        />
+      </InfoBlock>
     </div>
   );
 }
