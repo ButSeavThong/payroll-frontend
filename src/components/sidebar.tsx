@@ -21,6 +21,7 @@ import {
   Building2,
   Cpu,
   CalendarDays,
+  Network,
 } from "lucide-react";
 import { Avatar } from "./profile-image-upload";
 
@@ -46,6 +47,7 @@ const adminMenu = [
   { label: "Payroll", href: "/payroll", icon: Banknote },
   { label: "Leave", href: "/leave", icon: CalendarDays },
   { label: "System", href: "/system", icon: Cpu },
+  { label: "Architecture", href: "/architecture", icon: Network },
 ];
 
 const employeeMenu = [
@@ -55,6 +57,7 @@ const employeeMenu = [
   { label: "My Payroll", href: "/payroll", icon: Banknote },
   { label: "My Leave", href: "/leave", icon: CalendarDays },
   { label: "System", href: "/system", icon: Cpu },
+  { label: "Architecture", href: "/architecture", icon: Network },
 ];
 
 // ✅ Defined OUTSIDE components — stable reference, no re-creation on render

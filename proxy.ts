@@ -16,6 +16,7 @@ export function proxy(request: NextRequest) {
     pathname.startsWith('/users')      ||
     pathname.startsWith('/leave')      ||
     pathname.startsWith('/system')     ||
+    pathname.startsWith('/architecture') ||
     pathname.startsWith('/profile');
 
   // Already logged in → redirect away from login (but NOT from '/')
