@@ -1,4 +1,3 @@
-// src/components/profile-image-upload.tsx
 "use client";
 
 import { useRef, useState } from "react";
@@ -7,10 +6,8 @@ import {
   useRemoveProfileImageMutation,
 } from "@/src/feature/user/userApi";
 import { toast } from "sonner";
-import { Camera, Trash2, Upload, Loader2 } from "lucide-react";
+import { Camera, Loader2, Trash2, Upload, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "") ??
@@ -20,12 +17,100 @@ export function getAvatarUrl(
   profileImage: string | null | undefined,
 ): string | null {
   if (!profileImage) return null;
-  // If already a full URL return as-is
   if (profileImage.startsWith("http")) return profileImage;
   return `${API_BASE}/uploads/profile-images/${profileImage}`;
 }
 
-// ─── Avatar display ───────────────────────────────────────────────────────────
+function getInitials(name: string) {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (parts.length === 0) return "U";
+  return parts.map((part) => part.charAt(0).toUpperCase()).join("");
+}
+
+function getAvatarPalette(name: string) {
+  const palettes = [
+    {
+      shell: "from-emerald-500 via-teal-500 to-cyan-500",
+      glow: "from-emerald-200/70 via-white/10 to-cyan-200/70",
+      badge: "bg-emerald-100/90 text-emerald-700",
+    },
+    {
+      shell: "from-sky-500 via-blue-500 to-indigo-500",
+      glow: "from-sky-200/70 via-white/10 to-indigo-200/70",
+      badge: "bg-sky-100/90 text-sky-700",
+    },
+    {
+      shell: "from-amber-500 via-orange-500 to-rose-500",
+      glow: "from-amber-200/70 via-white/10 to-rose-200/70",
+      badge: "bg-amber-100/90 text-amber-700",
+    },
+    {
+      shell: "from-fuchsia-500 via-pink-500 to-rose-500",
+      glow: "from-fuchsia-200/70 via-white/10 to-rose-200/70",
+      badge: "bg-pink-100/90 text-pink-700",
+    },
+  ];
+
+  const seed = [...name].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return palettes[seed % palettes.length];
+}
+
+function AvatarVisual({
+  imageUrl,
+  name,
+  roundedClass,
+  sizeClass,
+  textClass,
+  badgeClass,
+}: {
+  imageUrl?: string | null;
+  name: string;
+  roundedClass: string;
+  sizeClass: string;
+  textClass: string;
+  badgeClass: string;
+}) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const shouldShowImage = Boolean(imageUrl) && !imageFailed;
+  const initials = getInitials(name);
+  const palette = getAvatarPalette(name);
+
+  return (
+    <div
+      className={`${sizeClass} ${roundedClass} relative flex shrink-0 items-center justify-center overflow-hidden border border-white/70 bg-gradient-to-br ${palette.shell} shadow-lg shadow-slate-900/10`}
+    >
+      {shouldShowImage ? (
+        <img
+          src={imageUrl ?? undefined}
+          alt={name}
+          className="h-full w-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <>
+          <div
+            className={`absolute inset-0 bg-gradient-to-br ${palette.glow} opacity-80`}
+          />
+          <div className="absolute -right-4 -top-4 h-14 w-14 rounded-full bg-white/15 blur-xl" />
+          <div className="absolute -bottom-6 -left-2 h-16 w-16 rounded-full bg-slate-950/10 blur-2xl" />
+          <div
+            className={`absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full shadow-sm ${badgeClass} ${palette.badge}`}
+          >
+            <UserRound className="h-3.5 w-3.5" />
+          </div>
+          <span className={`${textClass} relative font-bold text-white`}>
+            {initials}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
 
 export function Avatar({
   profileImage,
@@ -37,36 +122,39 @@ export function Avatar({
   size?: "sm" | "md" | "lg" | "xl";
 }) {
   const sizeMap = {
-    sm: "w-8 h-8 text-xs",
-    md: "w-10 h-10 text-sm",
-    lg: "w-14 h-14 text-xl",
-    xl: "w-24 h-24 text-3xl",
+    sm: {
+      sizeClass: "h-8 w-8",
+      textClass: "text-xs",
+      badgeClass: "hidden",
+    },
+    md: {
+      sizeClass: "h-10 w-10",
+      textClass: "text-sm",
+      badgeClass: "hidden",
+    },
+    lg: {
+      sizeClass: "h-14 w-14",
+      textClass: "text-xl",
+      badgeClass: "hidden",
+    },
+    xl: {
+      sizeClass: "h-24 w-24",
+      textClass: "text-3xl",
+      badgeClass: "",
+    },
   };
-  const url = getAvatarUrl(profileImage);
-  const initial = name.charAt(0).toUpperCase();
 
   return (
-    <div
-      className={`${sizeMap[size]} rounded-2xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center`}
-    >
-      {url ? (
-        <img
-          src={url}
-          alt={name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            // Fallback to initial if image fails to load
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
-      ) : (
-        <span className="text-white font-bold">{initial}</span>
-      )}
-    </div>
+    <AvatarVisual
+      imageUrl={getAvatarUrl(profileImage)}
+      name={name}
+      roundedClass="rounded-2xl"
+      sizeClass={sizeMap[size].sizeClass}
+      textClass={sizeMap[size].textClass}
+      badgeClass={sizeMap[size].badgeClass}
+    />
   );
 }
-
-// ─── Upload Component ─────────────────────────────────────────────────────────
 
 interface ProfileImageUploadProps {
   currentImage?: string | null;
@@ -90,9 +178,7 @@ export function ProfileImageUpload({
 
   const isLoading = uploading || removing;
 
-  // ── Process file ────────────────────────────────────────────────────────
   const processFile = async (file: File) => {
-    // Client-side validation
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowed.includes(file.type)) {
       toast.error("Only JPEG, PNG, and WebP images are allowed");
@@ -103,12 +189,10 @@ export function ProfileImageUpload({
       return;
     }
 
-    // Show preview
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
 
-    // Upload
     const formData = new FormData();
     formData.append("file", file);
 
@@ -122,7 +206,6 @@ export function ProfileImageUpload({
     }
   };
 
-  // ── Drag & Drop ─────────────────────────────────────────────────────────
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
@@ -130,7 +213,6 @@ export function ProfileImageUpload({
     if (file) processFile(file);
   };
 
-  // ── Remove ───────────────────────────────────────────────────────────────
   const handleRemove = async () => {
     try {
       await removeImage().unwrap();
@@ -143,19 +225,15 @@ export function ProfileImageUpload({
   };
 
   const displayUrl = preview ?? getAvatarUrl(currentImage);
-  const initial = name.charAt(0).toUpperCase();
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Avatar preview + drag target */}
       <div
-        className={`relative w-28 h-28 rounded-3xl overflow-hidden cursor-pointer
-          border-2 border-dashed transition-all
-          ${
-            dragOver
-              ? "border-emerald-400 bg-emerald-50 scale-105"
-              : "border-slate-200 hover:border-emerald-300"
-          }`}
+        className={`relative overflow-hidden rounded-[1.75rem] border-2 border-dashed transition-all ${
+          dragOver
+            ? "scale-105 border-emerald-400 bg-emerald-50"
+            : "border-slate-200/80 bg-white hover:border-emerald-300"
+        }`}
         onClick={() => !isLoading && fileInputRef.current?.click()}
         onDragOver={(e) => {
           e.preventDefault();
@@ -164,30 +242,24 @@ export function ProfileImageUpload({
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
       >
-        {/* Image or initial */}
-        {displayUrl ? (
-          <img
-            src={displayUrl}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center">
-            <span className="text-white text-4xl font-bold">{initial}</span>
-          </div>
-        )}
+        <AvatarVisual
+          imageUrl={displayUrl}
+          name={name}
+          roundedClass="rounded-[1.6rem]"
+          sizeClass="h-28 w-28"
+          textClass="text-4xl"
+          badgeClass=""
+        />
 
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
           {isLoading ? (
-            <Loader2 size={22} className="text-white animate-spin" />
+            <Loader2 size={22} className="animate-spin text-white" />
           ) : (
             <Camera size={22} className="text-white" />
           )}
         </div>
       </div>
 
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -200,7 +272,6 @@ export function ProfileImageUpload({
         }}
       />
 
-      {/* Action buttons */}
       <div className="flex gap-2">
         <Button
           type="button"
@@ -219,7 +290,7 @@ export function ProfileImageUpload({
             type="button"
             variant="outline"
             size="sm"
-            className="gap-1.5 text-xs border-red-200 text-red-600 hover:bg-red-50"
+            className="gap-1.5 border-red-200 text-xs text-red-600 hover:bg-red-50"
             disabled={isLoading}
             onClick={handleRemove}
           >
@@ -233,8 +304,8 @@ export function ProfileImageUpload({
         )}
       </div>
 
-      <p className="text-xs text-slate-400 text-center">
-        JPEG, PNG or WebP · Max 5MB
+      <p className="text-center text-xs text-slate-400">
+        JPEG, PNG or WebP - Max 5MB
         <br />
         Click or drag & drop to upload
       </p>
